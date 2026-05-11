@@ -24,7 +24,7 @@ rather to get some data loaded in one-off cases.
     - `offline_access`
     - `openid`
     - `profile`
-9. Copy [docker-compose.devicecode.yml](docker-compose.devicecode.yml) and [davmail.properties](davmail.devicecode.properties)
+9. Copy [docker-compose.devicecode.yml](docker-compose.devicecode.yml) and [davmail.devicecode.properties](davmail.devicecode.properties)
 10. Replace the placeholder values in the `davmail.devicecode.properties` file, mostly:
     - davmail.oauth.tenantId: Tenant ID of the Entra tenant
     - davmail.oauth.clientId: Application ID of your app registration
