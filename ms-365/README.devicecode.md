@@ -8,6 +8,9 @@ a DeviceCode authentication. This is unlikely useful for a permanent deployment 
 rather to get some data loaded in one-off cases.
 
 ## Instructions
+
+Open TODO: Restrict the use of the app registration
+
 1. You have Docker and Docker-Compose installed
 2. Your MS account admin has given his consent
 3. You have an app registered (single tenant) in Entra ID
@@ -43,7 +46,9 @@ rather to get some data loaded in one-off cases.
 In order to set up the app registration in a more reproducible way, here is some code that should help you set up the app registration using Powershell.
 (Very much work in progress!)
 
-TODO: Redirect URIs are not yet defined.
+TODO: 
+- Redirect URIs are not yet defined.
+- Restrict the use of the app registration
 
 ```powershell
 
