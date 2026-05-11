@@ -61,6 +61,9 @@ $AppDisplayName = "DMARC Report Viewer"
 $app = New-MgApplication -DisplayName $AppDisplayName -SignInAudience AzureADMyOrg
 
 # Enable public client flows
+Update-MgApplication -ApplicationId $app.Id -IsFallbackPublicClient
+
+# Set the redirect URI
 $redirectUri = "https://login.microsoftonline.com/common/oauth2/nativeclient"
 
 Update-MgApplication -ApplicationId $app.Id `
@@ -88,6 +91,9 @@ $requiredAccess = @{
         }
     }
 }
+
+# Apply the scopes
+Update-MgApplication -ApplicationId $app.Id -RequiredResourceAccess @($requiredAccess)
 
 # Grant admin consent
 # Check if a service principal already exists for our app reg, if not, create it
@@ -125,7 +131,7 @@ New-MgServicePrincipalAppRoleAssignment `
     -AppRoleId "00000000-0000-0000-0000-000000000000" # default role
 
 # Show the App ID and the tenant ID which you need in our config files
-Write-Host $app.AppId
-(Get-MgOrganization).Id
+Write-Host "App ID (davmail.oauth.clientId):" $app.AppId
+Write-Host "Tenant ID (davmail.oauth.tenantId):" (Get-MgOrganization).Id
 ```
 
