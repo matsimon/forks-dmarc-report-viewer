@@ -11,9 +11,10 @@ services:
       IMAP_DISABLE_TLS: "true"
       IMAP_PORT: "1993"
       IMAP_USER: "<replaceme>"
-      IMAP_PASSWORD: "<replaceme>"
+      IMAP_PASSWORD: "NOTNEEDED-WITH-DEVICECODE"
+      HTTP_SERVER_USER: "<replaceme>"
       HTTP_SERVER_PASSWORD: "<replaceme>"
-      LOG_LEVEL: "WARNING"
+      LOG_LEVEL: "warn"
     ports:
       - 8080:8080
 
@@ -27,6 +28,9 @@ services:
       retries: 10
       start_period: 5s
     volumes:
-      - $PWD/davmail.properties:/etc/davmail.properties
+      - $PWD/davmail.devicecode.properties:/etc/davmail.properties
     ports:
       - 1993:1993
+
+volumes:
+  davmail-data:
