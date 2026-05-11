@@ -20,7 +20,7 @@ rather to get some data loaded in one-off cases.
    - Enable `Allow public client flows`
 8. You have set up **delegated** Graph API permissions for (Manage > API Permissions):
     - `Mail.ReadWrite`       - If the DMARC mailbox is a regular mailbox and directly accessed
-    - `Mai.ReadWrite.Shared` - If the DMARC mailbox is a shared mailbox accessed only by delegated permissions
+    - `Mail.ReadWrite.Shared` - If the DMARC mailbox is a shared mailbox accessed only by delegated permissions
     - `offline_access`
     - `openid`
     - `profile`
@@ -37,3 +37,55 @@ rather to get some data loaded in one-off cases.
 14. Start the containers by running the command `docker compose --file docker-compose.devicdecode.yml`
 15. Navigate to https://login.microsoft.com/device and enter the code shown in the output
 16. Sign in as the user that has delegated permissions
+
+## Possible way to create the app registration
+
+In order to set up the app registration in a more reproducible way, here is some code that should help you set up the app registration using Powershell.
+(Very much work in progress!)
+
+TODO: Redirect URIs are not yet defined.
+
+```powershell
+
+Connect-MgGraph -Scopes Application.ReadWrite.All,AppRoleAssignment.ReadWrite.All
+
+# Set a display name and register the application
+$AppDisplayName = "DMARC Report Viewer"
+
+$app = New-MgApplication -DisplayName $AppDisplayName -SignInAudience AzureADMyOrg
+
+# Enable public client flows
+Update-MgApplication `
+  -ApplicationId $app.Id `
+  -RequiredResourceAccess @(
+    @{
+      ResourceAppId  = $graphSp.AppId
+      ResourceAccess = $graphResourceAccess
+    },
+    @{
+      ResourceAppId  = $exoSp.AppId
+      ResourceAccess = $exoResourceAccess
+    }
+  )
+
+# Grant the delegated API permissions
+$graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
+
+$graphScopes = @(
+  "openid",
+  "profile",
+  "offline_access"
+  "Mail.ReadWrite",
+  "Mail.ReadWrite.Shared"
+)
+
+$graphResourceAccess = $graphScopes | ForEach-Object {
+  $scope = $graphSp.Oauth2PermissionScopes | Where-Object Value -eq $_
+  @{
+    Id   = $scope.Id
+    Type = "Scope"
+  }
+}
+
+```
+
