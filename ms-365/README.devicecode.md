@@ -9,42 +9,37 @@ rather to get some data loaded in one-off cases.
 
 ## Instructions
 
-Open TODO: Restrict the use of the app registration
-
 1. You have Docker and Docker-Compose installed
 2. Your MS account admin has given his consent
-3. You have an app registered (single tenant) in Entra ID
-4. In the app registration set this Redirect URI configuration:
-   - Manage > Authentication > Redirect URI configuration > + Add Redirect URI
-   - Select **Mobile and desktop application**
-   - Enable this predefined URI `https://login.microsoftonline.com/common/oauth2/nativeclient`
-6. In the app registration, enable public client flows:
-   - Manage > Authentication > Settings
-   - Enable `Allow public client flows`
-8. You have set up **delegated** Graph API permissions for (Manage > API Permissions):
-    - `Mail.ReadWrite`       - If the DMARC mailbox is a regular mailbox and directly accessed
-    - `Mail.ReadWrite.Shared` - If the DMARC mailbox is a shared mailbox accessed only by delegated permissions
-    - `offline_access`
-    - `openid`
-    - `profile`
+3. Use the Powershell code below to register and app in Entra ID, then
+4. Set the redirect URI configuration as required
+   * Enable `Allow public client flows`
+   * Grant delegated Graph API permissions for the following scopes
+     - `Mail.ReadWrite` - Required, if the DMARC mailbox is a regular mailbox and directly accessed
+     - `Mail.ReadWrite.Shared` - Required, if the DMARC mailbox is a shared mailbox accessed by delegated permissions
+     - `offline_access`
+     - `openid`
+     - `profile`
+   * Create a service principal for the app registration
+   * Restrict the use to assigned users and assign a user (or group) so that they can use it
 9. Copy [docker-compose.devicecode.yml](docker-compose.devicecode.yml) and [davmail.devicecode.properties](davmail.devicecode.properties)
 10. Replace the placeholder values in the `davmail.devicecode.properties` file, mostly:
-    - davmail.oauth.tenantId: Tenant ID of the Entra tenant
-    - davmail.oauth.clientId: Application ID of your app registration
-12. Replace the placeholder values in the `docker-compose.devicecode.yml` file, mostly:
-    - IMAP_USER
-      - Regular mailboxes: Just enter primary mail address
+    - `davmail.oauth.tenantId`: Tenant ID of the Entra tenant
+    - `davmail.oauth.clientId`: Application ID of your app registration
+11. Replace the placeholder values in the `docker-compose.devicecode.yml` file, mostly:
+    - `IMAP_USER`, depending on your use case:
+      - Regular mailboxes: Just enter the primary mail address
       - Shared mailboxes with delegated user permissions: `delegateduser@example.net/sharedmailbox@example.net`
-    - HTTP_SERVER_USER
-    - HTTP_SERVER_PASSWORD
-14. Start the containers by running the command `docker compose --file docker-compose.devicdecode.yml`
-15. Navigate to https://login.microsoft.com/device and enter the code shown in the output
-16. Sign in as the user that has delegated permissions
+    - `HTTP_SERVER_USER`
+    - `HTTP_SERVER_PASSWORD`
+12. Start the containers by running the command `docker compose --file docker-compose.devicdecode.yml`
+13. Navigate to `https://login.microsoft.com/device` and enter the code shown in the output
+14. Sign in as the user that has delegated permissions
 
 ## Tips
 
-Are DMARC messages sorted into a subfolder?
-Add IMAP_FOLDER: "YOURFOLDER" to `docker-compose.devicecode.yml`
+**Q:** Are DMARC messages sorted into a subfolder?
+**A:** Add IMAP_FOLDER: "YOURFOLDER" to `docker-compose.devicecode.yml`
 
 ## Possible way to create the app registration
 
