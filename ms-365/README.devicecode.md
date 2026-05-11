@@ -51,7 +51,7 @@ TODO:
 - Restrict the use of the app registration
 
 ```powershell
-
+# Connect to Graph as admin
 Connect-MgGraph -Scopes Application.ReadWrite.All,AppRoleAssignment.ReadWrite.All
 
 # Set a display name and register the application
@@ -60,37 +60,67 @@ $AppDisplayName = "DMARC Report Viewer"
 $app = New-MgApplication -DisplayName $AppDisplayName -SignInAudience AzureADMyOrg
 
 # Enable public client flows
-Update-MgApplication `
-  -ApplicationId $app.Id `
-  -RequiredResourceAccess @(
-    @{
-      ResourceAppId  = $graphSp.AppId
-      ResourceAccess = $graphResourceAccess
-    },
-    @{
-      ResourceAppId  = $exoSp.AppId
-      ResourceAccess = $exoResourceAccess
+$redirectUri = "https://login.microsoftonline.com/common/oauth2/nativeclient"
+
+Update-MgApplication -ApplicationId $app.Id `
+    -PublicClient @{
+        RedirectUris = @($redirectUri)
     }
-  )
 
 # Grant the delegated API permissions
-$graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
+$graphAppId = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
 
-$graphScopes = @(
-  "openid",
-  "profile",
-  "offline_access"
-  "Mail.ReadWrite",
-  "Mail.ReadWrite.Shared"
-)
+# Get Graph service principal
+$graphSp = Get-MgServicePrincipal -Filter "appId eq '$graphAppId'"
 
-$graphResourceAccess = $graphScopes | ForEach-Object {
-  $scope = $graphSp.Oauth2PermissionScopes | Where-Object Value -eq $_
-  @{
-    Id   = $scope.Id
-    Type = "Scope"
-  }
+# Find the permission IDs we need
+$scopeNames = @("Mail.ReadWrite", "Mail.ReadWrite.Shared", "User.Read", "openid", "profile", "offline_access")
+$scopes = $graphSp.Oauth2PermissionScopes | Where-Object { $scopeNames -contains $_.Value }
+
+# Build the required resource access
+$requiredAccess = @{
+    ResourceAppId = $graphAppId
+    ResourceAccess = $scopes | ForEach-Object {
+        @{
+            Id = $_.Id
+            Type = "Scope"
+        }
+    }
 }
 
+# Grant admin consent
+
+# Check if grant already exists
+$existingGrant = Get-MgOauth2PermissionGrant -Filter "clientId eq '$($sp.Id)' and resourceId eq '$($graphSp.Id)'"
+
+if ($existingGrant) {
+    # Update existing grant with all scopes
+    Update-MgOauth2PermissionGrant -OAuth2PermissionGrantId $existingGrant.Id `
+        -Scope ($scopeNames -join " ")
+} else {
+    # Create new grant with all scopes at once
+    New-MgOauth2PermissionGrant `
+        -ClientId $sp.Id `
+        -ConsentType "AllPrincipals" `
+        -ResourceId $graphSp.Id `
+        -Scope ($scopeNames -join " ")
+}
+
+# Require explicit assignment
+Update-MgServicePrincipal -ServicePrincipalId $sp.Id `
+    -AppRoleAssignmentRequired
+
+# Assign a UPN that has delegated permissions using its UPN
+$user = Get-MgUser -Filter "userPrincipalName eq 'youruser@example.onmicrosoft.com'"
+
+New-MgServicePrincipalAppRoleAssignment `
+    -ServicePrincipalId $sp.Id `
+    -PrincipalId $user.Id `
+    -ResourceId $sp.Id `
+    -AppRoleId "00000000-0000-0000-0000-000000000000" # default role
+
+# Show the App ID and the tenant ID which you need in our config files
+Write-Host $app.AppId
+(Get-MgOrganization).Id
 ```
 
