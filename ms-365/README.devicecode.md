@@ -41,14 +41,15 @@ Open TODO: Restrict the use of the app registration
 15. Navigate to https://login.microsoft.com/device and enter the code shown in the output
 16. Sign in as the user that has delegated permissions
 
+## Tips
+
+Are DMARC messages sorted into a subfolder?
+Add IMAP_FOLDER: "YOURFOLDER" to `docker-compose.devicecode.yml`
+
 ## Possible way to create the app registration
 
-In order to set up the app registration in a more reproducible way, here is some code that should help you set up the app registration using Powershell.
-(Very much work in progress!)
-
-TODO: 
-- Redirect URIs are not yet defined.
-- Restrict the use of the app registration
+In order to set up the app registration in a more reproducible way, here is some code that should help you set 
+up the app registration using Powershell.
 
 ```powershell
 # Connect to Graph as admin
@@ -89,6 +90,11 @@ $requiredAccess = @{
 }
 
 # Grant admin consent
+# Check if a service principal already exists for our app reg, if not, create it
+$sp = Get-MgServicePrincipal -Filter "appId eq '$($app.AppId)'"
+if (-not $sp) {
+    $sp = New-MgServicePrincipal -AppId $app.AppId
+}
 
 # Check if grant already exists
 $existingGrant = Get-MgOauth2PermissionGrant -Filter "clientId eq '$($sp.Id)' and resourceId eq '$($graphSp.Id)'"
@@ -107,8 +113,7 @@ if ($existingGrant) {
 }
 
 # Require explicit assignment
-Update-MgServicePrincipal -ServicePrincipalId $sp.Id `
-    -AppRoleAssignmentRequired
+Update-MgServicePrincipal -ServicePrincipalId $sp.Id -AppRoleAssignmentRequired
 
 # Assign a UPN that has delegated permissions using its UPN
 $user = Get-MgUser -Filter "userPrincipalName eq 'youruser@example.onmicrosoft.com'"
