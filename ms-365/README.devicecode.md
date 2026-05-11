@@ -9,7 +9,7 @@ rather to get some data loaded in one-off cases.
 
 ## Instructions
 1. You have Docker and Docker-Compose installed
-2. Your MS account admin has given his constent
+2. Your MS account admin has given his consent
 3. You have an app registered (single tenant) in Entra ID
 4. In the app registration set this Redirect URI configuration:
    - Manage > Authentication > Redirect URI configuration > + Add Redirect URI
