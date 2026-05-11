@@ -1,0 +1,32 @@
+services:
+
+  dmarc:
+    image: ghcr.io/cry-inc/dmarc-report-viewer
+    restart: unless-stopped
+    depends_on:
+      davmail:
+        condition: service_healthy
+    environment:
+      IMAP_HOST: "davmail"
+      IMAP_DISABLE_TLS: "true"
+      IMAP_PORT: "1993"
+      IMAP_USER: "<replaceme>"
+      IMAP_PASSWORD: "<replaceme>"
+      HTTP_SERVER_PASSWORD: "<replaceme>"
+      LOG_LEVEL: "WARNING"
+    ports:
+      - 8080:8080
+
+  davmail:
+    image: ${IMAGE_NAME:-ghcr.io/mguessan/davmail:unstable}
+    container_name: "davmail"
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q '07C9' /proc/net/tcp6"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - $PWD/davmail.properties:/etc/davmail.properties
+    ports:
+      - 1993:1993
